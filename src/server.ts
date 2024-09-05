@@ -1,7 +1,17 @@
 import app from '.';
 import constants from './constants';
 import { AppDataSource } from './config';
-import { User } from './user/user.entity';
+import { Server } from 'node:http';
+
+function shutdown(server: Server) {
+	server.close(() => {
+		process.exit(0);
+	});
+
+	setTimeout(() => {
+		process.exit(1);
+	}, 10000);
+}
 
 const main = async () => {
 	try {
@@ -13,8 +23,16 @@ const main = async () => {
 				});
 		}
 
-		app.listen(constants.PORT, () => {
+		const server = app.listen(constants.PORT, () => {
 			console.log(`Server is running on ${constants.PORT} port`);
+		});
+
+		process.on('SIGINT', () => {
+			shutdown(server);
+		});
+
+		process.on('SIGTERM', () => {
+			shutdown(server);
 		});
 	} catch (error) {
 		console.error(error);
